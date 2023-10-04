@@ -1,0 +1,1 @@
+Download the chromedriver.exe to run the code, its version is 117, if the code didn't work, download the version that is comfortable to your chrome.
