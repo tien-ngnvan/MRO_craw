@@ -1,8 +1,7 @@
-from selenium import webdriver
 from time import sleep
-from selenium.common.exceptions import NoSuchElementException
+from selenium import webdriver
 from selenium.webdriver.common.by import By
-import numpy as np
+from selenium.common.exceptions import NoSuchElementException
 import polars as pl
 import os
 
