@@ -11,7 +11,7 @@ class TBCS(BaseDataset):
     This class is used to crawl and collect data from a web page.
     """
 
-    def __init__(self, url, save_name):
+    def __init__(self, url, save_name, get_list):
         """
         Initialize the TBCS instance with the provided URL and save_name.
 
@@ -20,7 +20,7 @@ class TBCS(BaseDataset):
         """
         self.url = url
         self.driver = webdriver.Chrome()
-        self.get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ'] # List of keywords to identify specific information
+        self.get_list = get_list # List of keywords to identify specific information
         self.link_items = []
         self.title_name = []
         self.category_name = []
@@ -193,7 +193,8 @@ class TBCS(BaseDataset):
         return df
 
 if __name__ == "__main__":
-    TBCS = TBCS('https://super-mro.com/thiet-bi-chieu-sang','thietbichieusang.csv')
+    get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ']
+    TBCS = TBCS('https://super-mro.com/thiet-bi-chieu-sang','thietbichieusang.csv',get_list)
     TBCS.run()
 
 
