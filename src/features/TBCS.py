@@ -19,8 +19,9 @@ class TBCS(BaseDataset):
         :param save_name: The name of the file where the data will be saved.
         """
         self.url = url
-        self.driver = webdriver.Chrome()
+        self.save_name = save_name
         self.get_list = get_list # List of keywords to identify specific information
+        self.driver = webdriver.Chrome()
         self.link_items = []
         self.title_name = []
         self.category_name = []
@@ -30,7 +31,7 @@ class TBCS(BaseDataset):
         self.descrip = []
         self.tech = []
         self.infor = []
-        self.save_name = save_name
+        
 
     def crawl_link_item(self):
         """
