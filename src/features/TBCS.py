@@ -20,6 +20,7 @@ class TBCS(BaseDataset):
         """
         self.url = url
         self.driver = webdriver.Chrome()
+        self.get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ'] # List of keywords to identify specific information
         self.link_items = []
         self.title_name = []
         self.category_name = []
@@ -66,9 +67,6 @@ class TBCS(BaseDataset):
         # Maximize the browser window
         self.driver.maximize_window()
 
-        # List of keywords to identify specific information
-        get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', "Xuất xứ"]      
-
         for url in self.link_items:
             # Open the URL in a web browser controlled by a Selenium WebDriver
             self.driver.get(url)
@@ -96,7 +94,7 @@ class TBCS(BaseDataset):
                     # Iterate through the split lines
                     for ele in a:
                         # Check if the line contains keywords from get_list
-                        if len(list(set(get_list) & (set(ele.split(':'))))):
+                        if len(list(set(self.get_list) & (set(ele.split(':'))))):
                             # If it contains a keyword, append it to the info list
                             info_list.append(ele)
 
