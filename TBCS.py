@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from base import BaseDataset
 import polars as pl
 
+
 class TBCS(BaseDataset):
     """
     This class is used to crawl and collect data from a web page.
