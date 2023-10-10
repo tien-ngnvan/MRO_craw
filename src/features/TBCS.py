@@ -19,6 +19,7 @@ class TBCS(BaseDataset):
         :param url: The URL to the web page to crawl.
         :param save_name: The name of the file where the data will be saved.
         """
+
         self.url = category_link
         self.save_name = save_name
         self.get_list = get_list # List of keywords to identify specific information
@@ -168,6 +169,7 @@ class TBCS(BaseDataset):
         
         driver.quit()
 
+
     def save(self):
         # Create a Polars DataFrame ('df') from multiple lists of data
         df = pl.DataFrame({
@@ -217,14 +219,7 @@ class TBCS(BaseDataset):
         return df
 
 if __name__ == "__main__":
+
     get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ', 'Bảo hành'] 
     TBCS = TBCS(category_link='https://super-mro.com/thiet-bi-chieu-sang', save_name='thietbichieusang.csv', get_list=get_list, pool_number=4)
     TBCS.run()
-
-
-
-
-
-
-
-
