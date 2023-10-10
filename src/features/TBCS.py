@@ -221,3 +221,10 @@ if __name__ == "__main__":
     TBCS = TBCS(category_link='https://super-mro.com/thiet-bi-chieu-sang', save_name='thietbichieusang.csv', get_list=get_list, pool_number=4)
     TBCS.run()
 
+
+
+
+
+
+
+
