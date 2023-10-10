@@ -40,6 +40,8 @@ class TBCS(BaseDataset):
         """
         # Navigate to the specified URL using the web driver
         self.driver.get(self.url)
+        # Create a list to store link items
+        link_items = []
 
         while True:
             try:
@@ -47,7 +49,7 @@ class TBCS(BaseDataset):
                 hrefs_item = self.driver.find_elements(By.CSS_SELECTOR, ".product-list .item [href]")
 
                 # Extract 'href' attribute values and add them to the link_items list
-                self.link_items = [href.get_attribute('href') for href in hrefs_item] + self.link_items
+                link_items = [href.get_attribute('href') for href in hrefs_item] + link_items
 
                 # Find and click the 'next' pagination element to go to the next page
                 next_pagination_cmt = self.driver.find_element(By.CSS_SELECTOR, 'a[rel="next"]')
@@ -60,7 +62,7 @@ class TBCS(BaseDataset):
                 break
 
         # Return the collected item links
-        return self.link_items
+        return link_items
         
     def crawl_item_info(self, url):
         """
@@ -72,6 +74,9 @@ class TBCS(BaseDataset):
         driver.get(url)
         # Pause execution for 3 seconds to allow the page to load
         sleep(3)
+
+        # Append current link to respective lists
+        self.link_items.append(url)
 
         # Initialize empty lists to store lines and relevant information
         lines = []
@@ -170,7 +175,7 @@ class TBCS(BaseDataset):
             'Class title': self.classes_name,
             'Sub-class title': self.sub_classes_name,
             'Title names': self.title_name,
-            'Link items': self.link_items,
+            'Link items': self.link_items[:12],
             'Item description': self.descrip,
             'Item tech': self.tech,
             'Item information': self.infor
@@ -194,14 +199,14 @@ class TBCS(BaseDataset):
 
     def run(self):
         # Crawl the initial links and gather item information
-        self.crawl_link_item()
+        link_items = self.crawl_link_item()
 
         # # (Optional): Save the link items 
         # self.save_link_items()
 
         # Create a thread pool and execute crawl_item_info method for each link item
         pool = ThreadPool(self.pool_number)
-        pool.starmap(self.crawl_item_info, [(url, ) for url in self.link_items])
+        pool.starmap(self.crawl_item_info, [(url, ) for url in link_items[:12]])
         pool.close()
         pool.join()
 
@@ -212,7 +217,7 @@ class TBCS(BaseDataset):
 
 if __name__ == "__main__":
     get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ'] 
-    TBCS = TBCS(category_link='https://super-mro.com/thiet-bi-chieu-sang', save_name='thietbichieusang.csv', get_list=get_list, pool_number=4)
+    TBCS = TBCS(category_link='https://super-mro.com/phu-kien-kim-khi', save_name='pkkk_fix.csv', get_list=get_list, pool_number=4)
     TBCS.run()
 
 
