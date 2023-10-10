@@ -125,16 +125,17 @@ class TBCS(BaseDataset):
         if current_item:
             self.infor.append(current_item)
         
-            # Extract technical data
+        # Extract technical data
         elems = driver.find_elements(By.CSS_SELECTOR, '.product-content__technical.pb-34 ul li')
         elems_texts = [e.text.replace('\n', ':') for e in elems]
         self.tech.append(elems_texts[1:])
 
         # Extract description data
+        elem = driver.find_elements(By.CSS_SELECTOR, '.css-content p')
         elem_ = driver.find_elements(By.CSS_SELECTOR, '.general_description.css-content.mt-15 p')
         elems = driver.find_elements(By.CSS_SELECTOR, ".general_description.css-content.mt-15 h3")
 
-        elems_texts = [f"{i.text.replace('.','')}, {j.text.split(',')[0]}" for i, j in zip(elem_, elems)]
+        elems_texts = [f"{a.text}, {b.text}, {c.text}" for a, b, c in zip(elem, elem_, elems)]
         self.descrip.extend(elems_texts)
 
 
@@ -175,7 +176,7 @@ class TBCS(BaseDataset):
             'Class title': self.classes_name,
             'Sub-class title': self.sub_classes_name,
             'Title names': self.title_name,
-            'Link items': self.link_items[:12],
+            'Link items': self.link_items,
             'Item description': self.descrip,
             'Item tech': self.tech,
             'Item information': self.infor
@@ -206,7 +207,7 @@ class TBCS(BaseDataset):
 
         # Create a thread pool and execute crawl_item_info method for each link item
         pool = ThreadPool(self.pool_number)
-        pool.starmap(self.crawl_item_info, [(url, ) for url in link_items[:12]])
+        pool.starmap(self.crawl_item_info, [(url, ) for url in link_items])
         pool.close()
         pool.join()
 
@@ -216,14 +217,7 @@ class TBCS(BaseDataset):
         return df
 
 if __name__ == "__main__":
-    get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ'] 
-    TBCS = TBCS(category_link='https://super-mro.com/phu-kien-kim-khi', save_name='pkkk_fix.csv', get_list=get_list, pool_number=4)
+    get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ', 'Bảo hành'] 
+    TBCS = TBCS(category_link='https://super-mro.com/thiet-bi-chieu-sang', save_name='thietbichieusang.csv', get_list=get_list, pool_number=4)
     TBCS.run()
-
-
-
-
-
-
-
 
