@@ -1,8 +1,9 @@
 from selenium import webdriver
-from time import sleep
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
+from multiprocessing.pool import ThreadPool
 from base import BaseDataset
+from time import sleep
 import polars as pl
 
 
@@ -11,16 +12,18 @@ class TBCS(BaseDataset):
     This class is used to crawl and collect data from a web page.
     """
 
-    def __init__(self, url, save_name, get_list):
+    def __init__(self, category_link, save_name, get_list, pool_number):
         """
-        Initialize the TBCS instance with the provided URL and save_name.
+        Initialize the class instance with the provided URL and save_name.
 
         :param url: The URL to the web page to crawl.
         :param save_name: The name of the file where the data will be saved.
         """
-        self.url = url
+
+        self.url = category_link
         self.save_name = save_name
         self.get_list = get_list # List of keywords to identify specific information
+        self.pool_number = pool_number
         self.driver = webdriver.Chrome()
         self.link_items = []
         self.title_name = []
@@ -32,13 +35,14 @@ class TBCS(BaseDataset):
         self.tech = []
         self.infor = []
         
-
     def crawl_link_item(self):
         """
         This function finds items on a web page and collects their links.
         """
         # Navigate to the specified URL using the web driver
         self.driver.get(self.url)
+        # Create a list to store link items
+        link_items = []
 
         while True:
             try:
@@ -46,7 +50,7 @@ class TBCS(BaseDataset):
                 hrefs_item = self.driver.find_elements(By.CSS_SELECTOR, ".product-list .item [href]")
 
                 # Extract 'href' attribute values and add them to the link_items list
-                self.link_items = [href.get_attribute('href') for href in hrefs_item] + self.link_items
+                link_items = [href.get_attribute('href') for href in hrefs_item] + link_items
 
                 # Find and click the 'next' pagination element to go to the next page
                 next_pagination_cmt = self.driver.find_element(By.CSS_SELECTOR, 'a[rel="next"]')
@@ -59,108 +63,112 @@ class TBCS(BaseDataset):
                 break
 
         # Return the collected item links
-        return self.link_items
+        return link_items
         
-    def crawl_item_info(self):
+    def crawl_item_info(self, url):
         """
         This function crawls and collects item information from web pages.
         """
-        # Maximize the browser window
-        self.driver.maximize_window()
+        # Use Chrome webdriver
+        driver = webdriver.Chrome()
+        # Open the URL in a web browser controlled by a Selenium WebDriver
+        driver.get(url)
+        # Pause execution for 3 seconds to allow the page to load
+        sleep(3)
 
-        for url in self.link_items:
-            # Open the URL in a web browser controlled by a Selenium WebDriver
-            self.driver.get(url)
-            # Pause execution for 3 seconds to allow the page to load
-            sleep(3)
+        # Append current link to respective lists
+        self.link_items.append(url)
 
-            # Initialize empty lists to store lines and relevant information
-            lines = []
-            info_list = []
+        # Initialize empty lists to store lines and relevant information
+        lines = []
+        info_list = []
 
-            # Find all elements with the class "product-summary__right"
-            elem = self.driver.find_elements(By.CLASS_NAME, "product-summary__right")
+        # Find all elements with the class "product-summary__right"
+        elem = driver.find_elements(By.CLASS_NAME, "product-summary__right")
 
-            # Iterate through the found elements
-            for e in elem:
-                # Get the text content of the current element
-                info = e.text
-                # Append the text with a delimiter (" # ") to the lines list
-                lines.append(info + " # ")
+        # Iterate through the found elements
+        for e in elem:
+            # Get the text content of the current element
+            info = e.text
+            # Append the text with a delimiter (" # ") to the lines list
+            lines.append(info + " # ")
 
-                # Split the lines based on newline character '\n'
-                for line in lines:
-                    a = line.split('\n')
+            # Split the lines based on newline character '\n'
+            for line in lines:
+                a = line.split('\n')
 
-                    # Iterate through the split lines
-                    for ele in a:
-                        # Check if the line contains keywords from get_list
-                        if len(list(set(self.get_list) & (set(ele.split(':'))))):
-                            # If it contains a keyword, append it to the info list
-                            info_list.append(ele)
+                # Iterate through the split lines
+                for ele in a:
+                    # Check if the line contains keywords from get_list
+                    if len(list(set(self.get_list) & (set(ele.split(':'))))):
+                        # If it contains a keyword, append it to the info list
+                        info_list.append(ele)
 
-            # Initialize an empty list to store group-specific information
-            current_item  = []
+        # Initialize an empty list to store group-specific information
+        current_item  = []
 
-            # Iterate through the elements in the 'info' list
-            for element in info_list:
-                # Check if the current element starts with 'Thương hiệu:'
-                if element.startswith('Thương hiệu:'):
-                    # If it does, and 'current_group' is not empty (indicating the end of a previous group),
-                    # then create a mini dictionary from key-value pairs in 'current_group'
-                    if current_item :
-                        # Create a mini dictionary by splitting each pair on ': ' and forming key-value pairs
-                        self.infor.append(current_item)
-                    current_item  = [element]
-                else:
-                    # If the current element does not start with 'Thương hiệu:',
-                    # add it to the current group for further processing
-                    current_item.append(element)
-
-            # Append the last group as a mini dictionary
-            if current_item:
-                self.infor.append(current_item)
-            
-             # Extract technical data
-            elems = self.driver.find_elements(By.CSS_SELECTOR, '.product-content__technical.pb-34 ul li')
-            elems_texts = [e.text.replace('\n', ':') for e in elems]
-            self.tech.append(elems_texts[1:])
-
-            # Extract description data
-            elem_ = self.driver.find_elements(By.CSS_SELECTOR, '.general_description.css-content.mt-15 p')
-            elems = self.driver.find_elements(By.CSS_SELECTOR, ".general_description.css-content.mt-15 h3")
-
-            elems_texts = [f"{i.text.replace('.','')}, {j.text.split(',')[0]}" for i, j in zip(elem_, elems)]
-            self.descrip.extend(elems_texts)
-
-
-            # Find breadcrumb elements on the page
-            hrefs_item = self.driver.find_elements(By.CSS_SELECTOR , ".breadcrum .container [href]")
-
-            # Extract text from breadcrumb elements
-            title_items = [href.text for href in hrefs_item]
-            del title_items[0]
-
-            # Append item details to respective lists
-            self.title_name.append(title_items[-1])
-            self.category_name.append(title_items[0])
-
-            # Check if there are sub-category, class, and sub-class titles
-            if len(title_items) > 2:
-                self.sub_category_name.append(title_items[1])
+        # Iterate through the elements in the 'info' list
+        for element in info_list:
+            # Check if the current element starts with 'Thương hiệu:'
+            if element.startswith('Thương hiệu:'):
+                # If it does, and 'current_group' is not empty (indicating the end of a previous group),
+                # then create a mini dictionary from key-value pairs in 'current_group'
+                if current_item :
+                    # Create a mini dictionary by splitting each pair on ': ' and forming key-value pairs
+                    self.infor.append(current_item)
+                current_item  = [element]
             else:
-                self.sub_category_name.append(None)
+                # If the current element does not start with 'Thương hiệu:',
+                # add it to the current group for further processing
+                current_item.append(element)
 
-            if len(title_items) > 3:
-                self.classes_name.append(title_items[2])
-            else:
-                self.classes_name.append(None)
+        # Append the last group as a mini dictionary
+        if current_item:
+            self.infor.append(current_item)
+        
+        # Extract technical data
+        elems = driver.find_elements(By.CSS_SELECTOR, '.product-content__technical.pb-34 ul li')
+        elems_texts = [e.text.replace('\n', ':') for e in elems]
+        self.tech.append(elems_texts[1:])
 
-            if len(title_items) > 4:
-                self.sub_classes_name.append(title_items[3])
-            else:
-                self.sub_classes_name.append(None)
-        self.driver.quit()
+        # Extract description data
+        elem = driver.find_elements(By.CSS_SELECTOR, '.css-content p')
+        elem_ = driver.find_elements(By.CSS_SELECTOR, '.general_description.css-content.mt-15 p')
+        elems = driver.find_elements(By.CSS_SELECTOR, ".general_description.css-content.mt-15 h3")
+
+        elems_texts = [f"{a.text}, {b.text}, {c.text}" for a, b, c in zip(elem, elem_, elems)]
+        self.descrip.extend(elems_texts)
+
+
+        # Find breadcrumb elements on the page
+        hrefs_item = driver.find_elements(By.CSS_SELECTOR , ".breadcrum .container [href]")
+
+        # Extract text from breadcrumb elements
+        title_items = [href.text for href in hrefs_item]
+        del title_items[0]
+
+        # Append item details to respective lists
+        self.title_name.append(title_items[-1])
+        self.category_name.append(title_items[0])
+
+        # Check if there are sub-category, class, and sub-class titles
+        if len(title_items) > 2:
+            self.sub_category_name.append(title_items[1])
+        else:
+            self.sub_category_name.append(None)
+
+        if len(title_items) > 3:
+            self.classes_name.append(title_items[2])
+        else:
+            self.classes_name.append(None)
+
+        if len(title_items) > 4:
+            self.sub_classes_name.append(title_items[3])
+        else:
+            self.sub_classes_name.append(None)
+        
+        driver.quit()
+
 
     def save(self):
         # Create a Polars DataFrame ('df') from multiple lists of data
@@ -185,23 +193,33 @@ class TBCS(BaseDataset):
 
         return df
     
+    def save_link_items(self):
+        # Create a Polars DataFrame ('df') from the list
+        df = pl.DataFrame({'Link items': self.link_items})
+        df.write_csv('link_'+self.save_name)
+
+        return df
+
     def run(self):
-        # Run above functions and return a dataframe
-        self.crawl_link_item()
-        self.crawl_item_info()
+        # Crawl the initial links and gather item information
+        link_items = self.crawl_link_item()
+
+        # # (Optional): Save the link items 
+        # self.save_link_items()
+
+        # Create a thread pool and execute crawl_item_info method for each link item
+        pool = ThreadPool(self.pool_number)
+        pool.starmap(self.crawl_item_info, [(url, ) for url in link_items])
+        pool.close()
+        pool.join()
+
+        # Save the collected data and return it as a dataframe
         df = self.save()
 
         return df
 
 if __name__ == "__main__":
-    get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ']
-    TBCS = TBCS('https://super-mro.com/thiet-bi-chieu-sang','thietbichieusang.csv',get_list)
+
+    get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ', 'Bảo hành'] 
+    TBCS = TBCS(category_link='https://super-mro.com/thiet-bi-chieu-sang', save_name='thietbichieusang.csv', get_list=get_list, pool_number=4)
     TBCS.run()
-
-
-
-
-
-
-
-
