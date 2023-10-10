@@ -12,7 +12,7 @@ class TBCS(BaseDataset):
     This class is used to crawl and collect data from a web page.
     """
 
-    def __init__(self, category_link, save_name, get_list, pool_number):
+    def __init__(self, category_link, save_name, get_list, pool_number, item_links_path):
         """
         Initialize the class instance with the provided URL and save_name.
 
@@ -24,6 +24,7 @@ class TBCS(BaseDataset):
         self.save_name = save_name
         self.get_list = get_list # List of keywords to identify specific information
         self.pool_number = pool_number
+        self.item_links_path = item_links_path
         self.driver = webdriver.Chrome()
         self.link_items = []
         self.title_name = []
@@ -201,15 +202,19 @@ class TBCS(BaseDataset):
         return df
 
     def run(self):
-        # Crawl the initial links and gather item information
-        link_items = self.crawl_link_item()
+        # # If you don't have csv file of link items, run this
+        # # Crawl the initial links and gather item information
+        # link_items = self.crawl_link_item()
 
         # # (Optional): Save the link items 
         # self.save_link_items()
 
+        web_df = pl.read_csv(self.item_links_path)
+        link_items = pl.Series(web_df['Link items']).to_list()
+
         # Create a thread pool and execute crawl_item_info method for each link item
         pool = ThreadPool(self.pool_number)
-        pool.starmap(self.crawl_item_info, [(url, ) for url in link_items])
+        pool.starmap(self.crawl_item_info, [(url, ) for url in link_items[210:218]])
         pool.close()
         pool.join()
 
@@ -220,6 +225,6 @@ class TBCS(BaseDataset):
 
 if __name__ == "__main__":
 
-    get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Xuất xứ', 'Bảo hành'] 
-    TBCS = TBCS(category_link='https://super-mro.com/thiet-bi-chieu-sang', save_name='thietbichieusang.csv', get_list=get_list, pool_number=4)
+    get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Bảo hành', 'Xuất xứ'] 
+    TBCS = TBCS(category_link='https://super-mro.com/thiet-bi-chieu-sang', save_name='thietbichieusang_full.csv', get_list=get_list, pool_number=4, item_links_path=r'D:\Private\Work\Program\MRO_craw\src\features\thietbichieusang.csv')
     TBCS.run()
