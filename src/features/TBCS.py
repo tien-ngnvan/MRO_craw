@@ -214,7 +214,7 @@ class TBCS(BaseDataset):
 
         # Create a thread pool and execute crawl_item_info method for each link item
         pool = ThreadPool(self.pool_number)
-        pool.starmap(self.crawl_item_info, [(url, ) for url in link_items[210:218]])
+        pool.starmap(self.crawl_item_info, [(url, ) for url in link_items])
         pool.close()
         pool.join()
 
