@@ -1,6 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
 from multiprocessing.pool import ThreadPool
 from base import BaseDataset
 from time import sleep
@@ -12,7 +12,7 @@ class TBCS(BaseDataset):
     This class is used to crawl and collect data from a web page.
     """
 
-    def __init__(self, category_link, save_name, get_list, pool_number, item_links_path):
+    def __init__(self, *category_link, save_name, get_list, pool_number, item_links_path):
         """
         Initialize the class instance with the provided URL and save_name.
 
@@ -97,6 +97,8 @@ class TBCS(BaseDataset):
             see_more_link.click()
         except NoSuchElementException:
             pass  # Handle if the "see more" link cannot be found
+        except ElementClickInterceptedException:
+            pass
 
         # Extract technical data
         elems = driver.find_elements(By.CSS_SELECTOR, '.product-content__technical.pb-34 ul li')
@@ -168,7 +170,7 @@ class TBCS(BaseDataset):
     def save_link_items(self):
         # Create a Polars DataFrame ('df') from the list
         df = pl.DataFrame({'Link items': self.link_items})
-        df.write_csv('link_'+self.save_name)
+        df.write_csv(self.save_name)
 
         return df
 
@@ -181,7 +183,7 @@ class TBCS(BaseDataset):
         # self.save_link_items()
 
         web_df = pl.read_csv(self.item_links_path)
-        link_items = pl.Series(web_df['Link_items']).to_list()
+        link_items = pl.Series(web_df['Link items']).to_list()
 
         # Create a thread pool and execute crawl_item_info method for each link item
         pool = ThreadPool(self.pool_number)
@@ -197,5 +199,5 @@ class TBCS(BaseDataset):
 if __name__ == "__main__":
 
     get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Bảo hành', 'Xuất xứ'] 
-    TBCS = TBCS(category_link='https://super-mro.com/nang-ha-kho-phu-tro', save_name='nangha_test.csv', get_list=get_list, pool_number=4, item_links_path=r'D:\Major6\Link_item\nanghakhophutro.csv')
+    TBCS = TBCS(save_name=r'D:\Private\Work\Program\MRO_craw\output\Craw\bangdinh.csv', get_list=get_list, pool_number=4, item_links_path=r'D:\Private\Work\Program\MRO_craw\src\Links\bangdinh.csv')
     TBCS.run()
