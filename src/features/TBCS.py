@@ -80,62 +80,33 @@ class TBCS(BaseDataset):
         # Append current link to respective lists
         self.link_items.append(url)
 
-        # Initialize empty lists to store lines and relevant information
-        lines = []
+        # Find all elements with the class "product-summary__right" which has information in get list
+        elem = driver.find_elements(By.CLASS_NAME, "product-summary__right p")
+        # Initialize empty lists to store relevant information
         info_list = []
+        # Extract description data
+        elems_texts = [e.text.replace('\n', ':') for e in elem]
+        for info in self.get_list:
+            for text in elems_texts:
+                if text.startswith(info):
+                    info_list.append(text)
+        self.infor.append(info_list)
 
-        # Find all elements with the class "product-summary__right"
-        elem = driver.find_elements(By.CLASS_NAME, "product-summary__right")
+        try:
+            see_more_link = driver.find_element(By.CSS_SELECTOR, '.see-more.show a[href]')
+            see_more_link.click()
+        except NoSuchElementException:
+            pass  # Handle if the "see more" link cannot be found
 
-        # Iterate through the found elements
-        for e in elem:
-            # Get the text content of the current element
-            info = e.text
-            # Append the text with a delimiter (" # ") to the lines list
-            lines.append(info + " # ")
-
-            # Split the lines based on newline character '\n'
-            for line in lines:
-                a = line.split('\n')
-
-                # Iterate through the split lines
-                for ele in a:
-                    # Check if the line contains keywords from get_list
-                    if len(list(set(self.get_list) & (set(ele.split(':'))))):
-                        # If it contains a keyword, append it to the info list
-                        info_list.append(ele)
-
-        # Initialize an empty list to store group-specific information
-        current_item  = []
-
-        # Iterate through the elements in the 'info' list
-        for element in info_list:
-            # Check if the current element starts with 'Thương hiệu:'
-            if element.startswith('Thương hiệu:'):
-                # If it does, and 'current_group' is not empty (indicating the end of a previous group),
-                # then create a mini dictionary from key-value pairs in 'current_group'
-                if current_item :
-                    # Create a mini dictionary by splitting each pair on ': ' and forming key-value pairs
-                    self.infor.append(current_item)
-                current_item  = [element]
-            else:
-                # If the current element does not start with 'Thương hiệu:',
-                # add it to the current group for further processing
-                current_item.append(element)
-
-        # Append the last group as a mini dictionary
-        if current_item:
-            self.infor.append(current_item)
-        
         # Extract technical data
         elems = driver.find_elements(By.CSS_SELECTOR, '.product-content__technical.pb-34 ul li')
         elems_texts = [e.text.replace('\n', ':') for e in elems]
         self.tech.append(elems_texts[1:])
 
         # Extract description data
-        elem = driver.find_elements(By.CSS_SELECTOR, '.css-content p')
+        elem = driver.find_elements(By.CSS_SELECTOR, '.css-content')
         elem_ = driver.find_elements(By.CSS_SELECTOR, '.general_description.css-content.mt-15 p')
-        elems = driver.find_elements(By.CSS_SELECTOR, ".general_description.css-content.mt-15 h3")
+        elems = driver.find_elements(By.CSS_SELECTOR, '.general_description.css-content.mt-15 h3')
 
         elems_texts = [f"{a.text}, {b.text}, {c.text}" for a, b, c in zip(elem, elem_, elems)]
         self.descrip.extend(elems_texts)
@@ -210,7 +181,7 @@ class TBCS(BaseDataset):
         # self.save_link_items()
 
         web_df = pl.read_csv(self.item_links_path)
-        link_items = pl.Series(web_df['Link items']).to_list()
+        link_items = pl.Series(web_df['link_items']).to_list()
 
         # Create a thread pool and execute crawl_item_info method for each link item
         pool = ThreadPool(self.pool_number)
@@ -225,6 +196,6 @@ class TBCS(BaseDataset):
 
 if __name__ == "__main__":
 
-    get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Bảo hành', 'Xuất xứ'] 
-    TBCS = TBCS(category_link='https://super-mro.com/thiet-bi-chieu-sang', save_name='thietbichieusang_full.csv', get_list=get_list, pool_number=4, item_links_path=r'D:\Private\Work\Program\MRO_craw\src\features\thietbichieusang.csv')
+    get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Bảo hành', 'Xuất xứ'] 
+    TBCS = TBCS(category_link='https://super-mro.com/nang-ha-kho-phu-tro', save_name='nangha_test.csv', get_list=get_list, pool_number=4, item_links_path=r'D:\Major6\Link_item\nanghakhophutro.csv')
     TBCS.run()
