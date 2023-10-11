@@ -181,11 +181,11 @@ class TBCS(BaseDataset):
         # self.save_link_items()
 
         web_df = pl.read_csv(self.item_links_path)
-        link_items = pl.Series(web_df['link_items']).to_list()
+        link_items = pl.Series(web_df['Link_items']).to_list()
 
         # Create a thread pool and execute crawl_item_info method for each link item
         pool = ThreadPool(self.pool_number)
-        pool.starmap(self.crawl_item_info, [(url, ) for url in Link_items])
+        pool.starmap(self.crawl_item_info, [(url, ) for url in link_items])
         pool.close()
         pool.join()
 
