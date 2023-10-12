@@ -7,7 +7,7 @@ from time import sleep
 import polars as pl
 
 
-class TBCS(BaseDataset):
+class Crawler(BaseDataset):
     """
     This class is used to crawl and collect data from a web page.
     """
@@ -199,5 +199,5 @@ class TBCS(BaseDataset):
 if __name__ == "__main__":
 
     get_list = ['Thương hiệu', 'Mã hệ thống', 'Model hãng', 'Đơn vị', 'Bảo hành', 'Xuất xứ'] 
-    TBCS = TBCS(save_name=r'D:\Private\Work\Program\MRO_craw\output\Craw\bangdinh.csv', get_list=get_list, pool_number=4, item_links_path=r'D:\Private\Work\Program\MRO_craw\src\Links\bangdinh.csv')
-    TBCS.run()
+    Crawler = Crawler(save_name=r'D:\Private\Work\Program\MRO_craw\output\Craw\vesinhcongnghiep.csv', get_list=get_list, pool_number=4, item_links_path=r'D:\Private\Work\Program\MRO_craw\src\Links\vesinhcongnghiep.csv')
+    Crawler.run()
