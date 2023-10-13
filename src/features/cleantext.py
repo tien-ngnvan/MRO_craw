@@ -26,11 +26,6 @@ class TextClean:
         clean_text = clean(text, bullets=True, extra_whitespace=True, dashes=True, lowercase=True)
         return clean_text
 
-    def clean_non_ascii_chars(self, text):
-        # Method to remove non-ASCII characters
-        clean_text = clean_non_ascii_chars(text)
-        return clean_text
-
     def clean_postfix(self, text):
         # Method to clean postfix content
         clean_text = clean_postfix(text, pattern=r"(END|STOP)")
@@ -39,6 +34,11 @@ class TextClean:
     def clean_prefix(self, text):
         # Method to clean prefix content
         clean_text = clean_prefix(text, pattern=r"(SUMMARY|DESCRIPTION):")
+        return clean_text
+
+    def clean_trailing_punctuation(self, text):
+        # Method to remove trailing punctuation
+        clean_text = clean_trailing_punctuation(text)
         return clean_text
 
     def remove_punctuation(self, text):
