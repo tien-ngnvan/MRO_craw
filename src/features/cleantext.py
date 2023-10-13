@@ -23,7 +23,7 @@ class TextClean:
 
     def clean_text(self, text):
         # Method to clean text (removing bullets, extra whitespace, etc.)
-        clean_text = clean(text, bullets=True, extra_whitespace=True, dashes=True, lowercase=True)
+        clean_text = clean(text, bullets=True, extra_whitespace=True, dashes=False, lowercase=False)
         return clean_text
 
     def clean_postfix(self, text):
@@ -51,6 +51,18 @@ class TextClean:
         clean_text = replace_unicode_quotes(text)
         return clean_text
     
+    def remove_texts(self, text):
+        # Method to remove nonsense information
+        start_index = text.find(", Đại siêu thị Vật")
+
+        # If the string is found, remove it along with the following text
+        if start_index != -1:
+            result = text[:start_index]
+        else:
+            # If the string is not found, leave the text unchanged
+            result = text
+        return result
+    
     def process(self):
         # Clean every text in the list with all process function
         for text in self.texts:
@@ -58,9 +70,8 @@ class TextClean:
             text = self.clean_postfix(text)
             text = self.clean_prefix(text)
             text = self.clean_text(text)
-            text = self.clean_trailing_punctuation(text)
-            text = self.remove_punctuation(text)
             text = self.replace_unicode_quotes(text)
+            text = self.remove_texts(text)
             self.cleaned_texts.append(text)
 
     def save(self):
@@ -79,11 +90,12 @@ class TextClean:
         return self.cleaned_texts
     
 if __name__ == "__main__":
-    text = ['"\n<html charset="utf-8"><p>Hello 😀</p></html>"', "<p>Xóa tag</p>",
-            "● Xóa bullet và IN THƯỜNG","XÓA khoảng:     cách-và-dash", "Kết thúc! END", "SUMMARY: Chỗ này ghi tóm tắt!",
-            "Xóa trailing punctation.","“Xóa punctation!”", "đây là lần thử nghiệm"]
+    # Read the contents of the CSV file using pandas
+    web_df = pl.read_csv(r'D:\Private\Work\Program\MRO_craw\output\Craw\vanphongpham.csv')
+
+    # Extract the 'Item information' column from the DataFrame and convert it to a list
+    info_items = pl.Series(web_df['Item description']).to_list()
 
     # Create an instance of TextClean and clean the HTML tags
-    Cleaner = TextClean(text)
+    Cleaner = TextClean(info_items)
     cleaned_html = Cleaner.run()
-    print(cleaned_html)
