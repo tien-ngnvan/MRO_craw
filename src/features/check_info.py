@@ -6,24 +6,33 @@ import polars as pl
 
 
 class CrawInfo(object):
-
     def __init__(self, url, save_name) -> None:
+        """
+        Initializes an instance of CrawInfo.
+
+        :param url: The URL of the webpage to scrape.
+        :param save_name: The name of the CSV file to save the scraped data.
+        """
+        # Initialize class attributes
         self.url = url
         self.save_name = save_name
         self.driver = webdriver.Chrome()
-        self.linkk = []
-        self.category = []
-        self.sub_category = []
-        self.title_class = []
-        self.info_subclass = []
+        self.linkk = []  # List to store links
+        self.category = []  # List to store category titles
+        self.sub_category = []  # List to store sub-category titles
+        self.title_class = []  # List to store class titles
+        self.info_subclass = []  # List to store information from sub-classes
 
     def get_link_subclass(self):
+        """
+        Scrapes links to sub-categories from the main page.
+        """
         self.driver.get(self.url)
         sleep(3)
 
         item = self.driver.find_elements(By.CSS_SELECTOR, '.product_category-area__sub-category .item a[href]')
         link = [i.get_attribute('href') for i in item]
-
+        # Get links to sub-class
         for url in link:
             self.driver.get(url)
             sleep(2)
@@ -102,7 +111,7 @@ class CrawInfo(object):
 
         return df
     
-
+# Entry point for the script
 if __name__ == "__main__":
 
     # CrawInfo = CrawInfo(url='https://super-mro.com/thiet-bi-chieu-sang', save_name='thietbichieusang_test.csv')
