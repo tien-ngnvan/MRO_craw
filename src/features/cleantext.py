@@ -41,11 +41,6 @@ class TextClean:
         clean_text = clean_prefix(text, pattern=r"(SUMMARY|DESCRIPTION):")
         return clean_text
 
-    def clean_trailing_punctuation(self, text):
-        # Method to remove trailing punctuation
-        clean_text = clean_trailing_punctuation(text)
-        return clean_text
-
     def remove_punctuation(self, text):
         # Method to remove all punctuation
         clean_text = remove_punctuation(text)
@@ -60,7 +55,6 @@ class TextClean:
         # Clean every text in the list with all process function
         for text in self.texts:
             text = self.clean_tag_html(text)
-            text = self.clean_non_ascii_chars(text)
             text = self.clean_postfix(text)
             text = self.clean_prefix(text)
             text = self.clean_text(text)
@@ -85,9 +79,9 @@ class TextClean:
         return self.cleaned_texts
     
 if __name__ == "__main__":
-    text = ['"\n<html charset="utf-8"><p>Hello 😀</p></html>"','<p>Hello cac ban</p>',
-            "● An excellent point!","ITEM 1A:     RISK-FACTORS","\x88This text contains®non-ascii characters!●",
-            "The end! END", "SUMMARY: This is the best summary of all time!","ITEM 1A: RISK FACTORS.","“A lovely quote!”"]
+    text = ['"\n<html charset="utf-8"><p>Hello 😀</p></html>"', "<p>Xóa tag</p>",
+            "● Xóa bullet và IN THƯỜNG","XÓA khoảng:     cách-và-dash", "Kết thúc! END", "SUMMARY: Chỗ này ghi tóm tắt!",
+            "Xóa trailing punctation.","“Xóa punctation!”", "đây là lần thử nghiệm"]
 
     # Create an instance of TextClean and clean the HTML tags
     Cleaner = TextClean(text)
