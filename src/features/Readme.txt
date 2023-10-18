@@ -1,5 +1,10 @@
 # Task's title: Crawl data information from one category: Thiet bi chieu sang
 
+# How to get chrome version
++ Run chromeversion file to know your version
++ Go to this link to choose the chrome driver https://googlechromelabs.github.io/chrome-for-testing/#stable
+
+
 # Task's description: 
 + Crawl item's links 
 + Use the links to crawl item's informations and preprocess them
